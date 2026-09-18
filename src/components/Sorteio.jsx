@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import ModoJogo from './ModoJogo';
 
-export default function Sorteio() {
-  const [elenco, setElenco] = useState([]);
+// Agora recebe o "elenco" diretamente do App.jsx
+export default function Sorteio({ elenco }) { 
   const [presentes, setPresentes] = useState([]);
   const [timeA, setTimeA] = useState([]);
   const [timeB, setTimeB] = useState([]);
   const [partidaIniciada, setPartidaIniciada] = useState(false);
 
+// Mantém toda a equipa marcada como presente quando o elenco atualiza
   useEffect(() => {
-    const dadosSalvos = localStorage.getItem('elencoRessacaFC');
-    if (dadosSalvos) {
-      const jogadores = JSON.parse(dadosSalvos);
-      setElenco(jogadores);
-      setPresentes(jogadores.map(j => j.nome));
-    }
-  }, []);
+    if (elenco) setPresentes(elenco.map(j => j.nome));
+  }, [elenco]);
 
   const togglePresenca = (nome) => {
     if (presentes.includes(nome)) setPresentes(presentes.filter(p => p !== nome));

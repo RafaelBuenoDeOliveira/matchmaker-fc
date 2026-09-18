@@ -2,48 +2,44 @@ import React, { useState, useEffect } from 'react';
 import FormularioJogador from './components/FormularioJogador';
 import ListaJogadores from './components/ListaJogadores';
 import Sorteio from './components/Sorteio';
+import { supabase } from './supabase';
 
-function App() {
+export default function App() {
   const [jogadores, setJogadores] = useState([]);
   const [abaAtiva, setAbaAtiva] = useState('elenco');
   const [jogadorEmEdicao, setJogadorEmEdicao] = useState(null);
 
   useEffect(() => {
-    const dadosSalvos = localStorage.getItem('elencoRessacaFC');
-    if (dadosSalvos) {
-      setJogadores(JSON.parse(dadosSalvos));
-    }
+    buscarJogadores();
   }, []);
 
-  const salvarJogador = (dadosJogador) => {
-    let novaLista = [...jogadores];
-    if (jogadorEmEdicao !== null) {
-      // Se estava a editar, atualiza a posição exata na lista
-      novaLista[jogadorEmEdicao.index] = dadosJogador;
-      setJogadorEmEdicao(null); // Limpa o modo de edição
-    } else {
-      // Se não, adiciona um novo ao final
-      novaLista.push(dadosJogador);
+  const buscarJogadores = async () => {
+    const { data, error } = await supabase
+      .from('jogadores')
+      .select('*')
+      .order('created_at', { ascending: true });
+    
+    if (error) console.error("Erro ao buscar dados:", error);
+    else setJogadores(data || []);
+  };
+
+  const handleSalvar = () => {
+    buscarJogadores(); // Recarrega a lista da base de dados
+    setJogadorEmEdicao(null);
+  };
+
+  const removerJogador = async (indexParaRemover) => {
+    const jogador = jogadores[indexParaRemover];
+    if (jogador.id) {
+      await supabase.from('jogadores').delete().eq('id', jogador.id);
+      buscarJogadores();
     }
-    setJogadores(novaLista);
-    localStorage.setItem('elencoRessacaFC', JSON.stringify(novaLista));
   };
 
-  const removerJogador = (indexParaRemover) => {
-    const novaLista = jogadores.filter((_, index) => index !== indexParaRemover);
-    setJogadores(novaLista);
-    localStorage.setItem('elencoRessacaFC', JSON.stringify(novaLista));
-  };
-
-  // Função nova: Pega os dados do jogador clicado e rola a tela para o topo
   const iniciarEdicao = (index) => {
     setJogadorEmEdicao({ index, jogador: jogadores[index] });
     setAbaAtiva('elenco');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const cancelarEdicao = () => {
-    setJogadorEmEdicao(null);
   };
 
   return (
@@ -65,23 +61,13 @@ function App() {
       <main>
         {abaAtiva === 'elenco' ? (
           <>
-            <FormularioJogador 
-              onSalvar={salvarJogador} 
-              jogadorEmEdicao={jogadorEmEdicao} 
-              onCancelar={cancelarEdicao} 
-            />
-            <ListaJogadores 
-              jogadores={jogadores} 
-              removerJogador={removerJogador} 
-              iniciarEdicao={iniciarEdicao} 
-            />
+            <FormularioJogador onSalvar={handleSalvar} jogadorEmEdicao={jogadorEmEdicao} onCancelar={() => setJogadorEmEdicao(null)} />
+            <ListaJogadores jogadores={jogadores} removerJogador={removerJogador} iniciarEdicao={iniciarEdicao} />
           </>
         ) : (
-          <Sorteio />
+          <Sorteio elenco={jogadores} />
         )}
       </main>
     </div>
   );
 }
-
-export default App;
