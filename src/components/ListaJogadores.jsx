@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ListaJogadores({ jogadores, removerJogador, iniciarEdicao }) {
+export default function ListaJogadores({ jogadores, removerJogador, iniciarEdicao, perfil }) {
   if (jogadores.length === 0) return <p className="text-center text-gray-500 mt-8 font-medium">O elenco está vazio ou a carregar!</p>;
 
   return (
@@ -11,7 +11,6 @@ export default function ListaJogadores({ jogadores, removerJogador, iniciarEdica
           <div key={index} className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-600 flex justify-between items-center">
             
             <div className="flex items-center gap-4">
-              {/* Mostra a foto se existir, caso contrário mostra um círculo com a inicial */}
               {jogador.foto_url ? (
                 <img src={jogador.foto_url} alt={jogador.nome} className="w-14 h-14 rounded-full object-cover border-2 border-gray-200" />
               ) : (
@@ -27,14 +26,17 @@ export default function ListaJogadores({ jogadores, removerJogador, iniciarEdica
               </div>
             </div>
             
-            <div className="flex gap-2">
-              <button onClick={() => iniciarEdicao(index)} className="text-blue-500 hover:text-blue-700 font-semibold px-3 py-1 border border-blue-500 rounded">
-                Editar
-              </button>
-              <button onClick={() => removerJogador(index)} className="text-red-500 hover:text-red-700 font-semibold px-3 py-1 border border-red-500 rounded">
-                Remover
-              </button>
-            </div>
+            {/* Só desenha os botões de edição/remoção se o utilizador for admin ou master */}
+            {(perfil?.nivel_acesso === 'admin' || perfil?.nivel_acesso === 'master') && (
+              <div className="flex gap-2">
+                <button onClick={() => iniciarEdicao(index)} className="text-blue-500 hover:text-blue-700 font-semibold px-3 py-1 border border-blue-500 rounded">
+                  Editar
+                </button>
+                <button onClick={() => removerJogador(index)} className="text-red-500 hover:text-red-700 font-semibold px-3 py-1 border border-red-500 rounded">
+                  Remover
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
